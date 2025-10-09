@@ -14,5 +14,13 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
 
+  populate:
+    build: ./db
+    container_name: populate_script
+    volumes:
+      - ./silver:/app/silver
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
