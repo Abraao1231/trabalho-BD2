@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  bd2_network:
+    driver: bridge
+
 services:
   db:
     image: postgres:13
@@ -9,10 +13,12 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: filmes_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bd2_network
 
   populate:
     build: ./db
@@ -21,6 +27,8 @@ services:
       - ./silver:/app/silver
     depends_on:
       - db
+    networks:
+      - bd2_network
 
 volumes:
   postgres_data:
