@@ -20,15 +20,5 @@ services:
     networks:
       - bd2_network
 
-  populate:
-    build: ./db
-    container_name: populate_script
-    volumes:
-      - ./silver:/app/silver
-    depends_on:
-      - db
-    networks:
-      - bd2_network
-
 volumes:
   postgres_data:
