@@ -321,3 +321,68 @@ SELECT
     MAX(dla.ano) AS ano_final
 FROM gold.FAT_LANCAMENTO lan
 INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk;
+
+
+-- ========================================
+-- 17. TOP DISTRIBUIDORAS POR PERÍODO DE 3 ANOS
+-- ========================================
+WITH periodos_trienais AS (
+    SELECT 
+        dla.ano,
+        CASE 
+            WHEN dla.ano % 3 = 0 THEN CONCAT((dla.ano - 2)::TEXT, '-', dla.ano::TEXT)
+            WHEN dla.ano % 3 = 1 THEN CONCAT(dla.ano::TEXT, '-', (dla.ano + 2)::TEXT)
+            WHEN dla.ano % 3 = 2 THEN CONCAT((dla.ano - 1)::TEXT, '-', (dla.ano + 1)::TEXT)
+        END AS periodo_trienal,
+        CASE 
+            WHEN dla.ano % 3 = 0 THEN dla.ano - 2
+            WHEN dla.ano % 3 = 1 THEN dla.ano
+            WHEN dla.ano % 3 = 2 THEN dla.ano - 1
+        END AS ano_inicio_periodo,
+        dis.distribuidora,
+        dis.cnpj_distribuidora,
+        lan.renda_total,
+        lan.publico_total,
+        lan.srk_filme_fk
+    FROM gold.FAT_LANCAMENTO lan
+    INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dist_fk = dis.srk_dist_pk
+),
+faturamento_trienal AS (
+    SELECT 
+        periodo_trienal,
+        ano_inicio_periodo,
+        distribuidora,
+        cnpj_distribuidora,
+        SUM(renda_total) AS faturamento_total,
+        SUM(publico_total) AS publico_total,
+        COUNT(DISTINCT srk_filme_fk) AS qtd_filmes,
+        ROUND(AVG(renda_total), 2) AS faturamento_medio
+    FROM periodos_trienais
+    GROUP BY periodo_trienal, ano_inicio_periodo, distribuidora, cnpj_distribuidora
+),
+ranking_por_periodo AS (
+    SELECT 
+        periodo_trienal,
+        distribuidora,
+        cnpj_distribuidora,
+        faturamento_total,
+        publico_total,
+        qtd_filmes,
+        faturamento_medio,
+        RANK() OVER (PARTITION BY periodo_trienal ORDER BY faturamento_total DESC) AS ranking
+    FROM faturamento_trienal
+)
+SELECT 
+    periodo_trienal,
+    ranking,
+    distribuidora,
+    cnpj_distribuidora,
+    faturamento_total,
+    publico_total,
+    qtd_filmes,
+    faturamento_medio,
+    ROUND((faturamento_total / NULLIF(publico_total, 0)), 2) AS ticket_medio
+FROM ranking_por_periodo
+WHERE ranking <= 10
+ORDER BY periodo_trienal DESC, ranking ASC;
