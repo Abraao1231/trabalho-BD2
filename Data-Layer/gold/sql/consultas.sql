@@ -4,17 +4,17 @@
 -- ========================================
 
 -- ========================================
--- 1. TOP 10 DISTRIBUIDORAS POR FATURAMENTO TOTAL
+-- 1. TOP 10 disRIBUIDORAS POR FATURAMENTO TOTAL
 -- ========================================
 SELECT 
-    dist.distribuidora AS distribuidora,
-    dist.cnpj_distribuidora AS cnpj,
+    dis.disribuidora AS disribuidora,
+    dis.cnpj_disribuidora AS cnpj,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes_lancados
+    COUNT(disINCT lan.srk_filme_fk) AS qtd_filmes_lancados
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
-GROUP BY dist.distribuidora, dist.cnpj_distribuidora
+INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+GROUP BY dis.disribuidora, dis.cnpj_disribuidora
 ORDER BY faturamento_total DESC
 LIMIT 10;
 
@@ -23,19 +23,19 @@ LIMIT 10;
 -- 2. TOP 10 FILMES DE MAIOR BILHETERIA
 -- ========================================
 SELECT 
-    filme.titulo_original,
-    filme.tipo_obra,
-    filme.pais_obra,
-    dist.distribuidora,
-    dlan.ano,
+    fil.titulo_original,
+    fil.tipo_obra,
+    fil.pais_obra,
+    dis.disribuidora,
+    dla.ano,
     SUM(lan.renda_total) AS bilheteria_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
-GROUP BY filme.titulo_original, filme.tipo_obra, filme.pais_obra, dist.distribuidora, dlan.ano
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.disribuidora, dla.ano
 ORDER BY bilheteria_total DESC
 LIMIT 10;
 
@@ -44,15 +44,15 @@ LIMIT 10;
 -- 3. FATURAMENTO POR PAÍS DE ORIGEM (EXCLUINDO EUA E CANADÁ)
 -- ========================================
 SELECT 
-    filme.pais_obra,
-    COUNT(DISTINCT filme.srk_filme_pk) AS qtd_filmes,
+    fil.pais_obra,
+    COUNT(disINCT fil.srk_filme_pk) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio_por_lancamento
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-WHERE filme.pais_obra NOT IN ('ESTADOS UNIDOS', 'CANADÁ', 'CANADA')
-GROUP BY filme.pais_obra
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+WHERE fil.pais_obra NOT IN ('ESTADOS UNIDOS', 'CANADÁ', 'CANADA')
+GROUP BY fil.pais_obra
 ORDER BY faturamento_total DESC
 LIMIT 10;
 
@@ -61,15 +61,15 @@ LIMIT 10;
 -- 4. DESEMPENHO POR TIPO DE OBRA
 -- ========================================
 SELECT 
-    filme.tipo_obra,
-    COUNT(DISTINCT filme.srk_filme_pk) AS qtd_filmes,
+    fil.tipo_obra,
+    COUNT(disINCT fil.srk_filme_pk) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-GROUP BY filme.tipo_obra
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+GROUP BY fil.tipo_obra
 ORDER BY faturamento_total DESC;
 
 
@@ -77,15 +77,15 @@ ORDER BY faturamento_total DESC;
 -- 5. FATURAMENTO POR TIPO DE OBRA (EXCLUINDO FICÇÃO E ANIMAÇÃO)
 -- ========================================
 SELECT 
-    filme.tipo_obra,
-    COUNT(DISTINCT filme.srk_filme_pk) AS qtd_filmes,
+    fil.tipo_obra,
+    COUNT(disINCT fil.srk_filme_pk) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-WHERE filme.tipo_obra NOT IN ('FICÇÃO', 'ANIMAÇÃO', 'FICCAO', 'ANIMACAO')
-GROUP BY filme.tipo_obra
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+WHERE fil.tipo_obra NOT IN ('FICÇÃO', 'ANIMAÇÃO', 'FICCAO', 'ANIMACAO')
+GROUP BY fil.tipo_obra
 ORDER BY faturamento_total DESC;
 
 
@@ -93,24 +93,24 @@ ORDER BY faturamento_total DESC;
 -- 6. ANÁLISE TEMPORAL - FATURAMENTO POR ANO
 -- ========================================
 SELECT 
-    dlan.ano,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_lancamentos,
+    dla.ano,
+    COUNT(disINCT lan.srk_filme_fk) AS qtd_lancamentos,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
-GROUP BY dlan.ano
-ORDER BY dlan.ano DESC;
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+GROUP BY dla.ano
+ORDER BY dla.ano DESC;
 
 
 -- ========================================
 -- 7. SAZONALIDADE - FATURAMENTO POR MÊS DO ANO
 -- ========================================
 SELECT 
-    dlan.mes,
-    CASE dlan.mes
+    dla.mes,
+    CASE dla.mes
         WHEN 1 THEN 'Janeiro'
         WHEN 2 THEN 'Fevereiro'
         WHEN 3 THEN 'Março'
@@ -129,9 +129,9 @@ SELECT
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
-GROUP BY dlan.mes
-ORDER BY dlan.mes;
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+GROUP BY dla.mes
+ORDER BY dla.mes;
 
 
 -- ========================================
@@ -139,18 +139,18 @@ ORDER BY dlan.mes;
 -- ========================================
 WITH ticket_medio_calc AS (
     SELECT 
-        filme.titulo_original,
-        filme.tipo_obra,
-        filme.pais_obra,
-        dist.distribuidora,
+        fil.titulo_original,
+        fil.tipo_obra,
+        fil.pais_obra,
+        dis.disribuidora,
         SUM(lan.renda_total) AS renda_total,
         SUM(lan.publico_total) AS publico_total,
         ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
+    INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
     WHERE lan.publico_total > 0
-    GROUP BY filme.titulo_original, filme.tipo_obra, filme.pais_obra, dist.distribuidora
+    GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.disribuidora
 )
 SELECT *
 FROM ticket_medio_calc
@@ -163,18 +163,18 @@ LIMIT 10;
 -- ========================================
 WITH ticket_medio_calc AS (
     SELECT 
-        filme.titulo_original,
-        filme.tipo_obra,
-        filme.pais_obra,
-        dist.distribuidora,
+        fil.titulo_original,
+        fil.tipo_obra,
+        fil.pais_obra,
+        dis.disribuidora,
         SUM(lan.renda_total) AS renda_total,
         SUM(lan.publico_total) AS publico_total,
         ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
+    INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
     WHERE lan.publico_total > 0
-    GROUP BY filme.titulo_original, filme.tipo_obra, filme.pais_obra, dist.distribuidora
+    GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.disribuidora
 )
 SELECT *
 FROM ticket_medio_calc
@@ -190,61 +190,61 @@ WITH faturamento_total AS (
     SELECT SUM(renda_total) AS total_mercado
     FROM gold.FAT_LANCAMENTO
 ),
-faturamento_por_dist AS (
+faturamento_por_dis AS (
     SELECT 
-        d.distribuidora,
-        SUM(lan.renda_total) AS faturamento_distribuidora
+        d.disribuidora,
+        SUM(lan.renda_total) AS faturamento_disribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA d ON lan.srk_dist_fk = d.srk_dist_pk
-    GROUP BY d.distribuidora
+    INNER JOIN gold.DIM_disRIBUIDORA d ON lan.srk_dis_fk = d.srk_dis_pk
+    GROUP BY d.disribuidora
 )
 SELECT 
-    fpd.distribuidora,
-    fpd.faturamento_distribuidora,
+    fpd.disribuidora,
+    fpd.faturamento_disribuidora,
     ft.total_mercado,
-    ROUND((fpd.faturamento_distribuidora / NULLIF(ft.total_mercado, 0)) * 100, 2) AS market_share_percentual,
-    SUM(ROUND((fpd.faturamento_distribuidora / NULLIF(ft.total_mercado, 0)) * 100, 2)) 
-        OVER (ORDER BY fpd.faturamento_distribuidora DESC) AS market_share_acumulado
-FROM faturamento_por_dist fpd
+    ROUND((fpd.faturamento_disribuidora / NULLIF(ft.total_mercado, 0)) * 100, 2) AS market_share_percentual,
+    SUM(ROUND((fpd.faturamento_disribuidora / NULLIF(ft.total_mercado, 0)) * 100, 2)) 
+        OVER (ORDER BY fpd.faturamento_disribuidora DESC) AS market_share_acumulado
+FROM faturamento_por_dis fpd
 CROSS JOIN faturamento_total ft
-ORDER BY fpd.faturamento_distribuidora DESC
+ORDER BY fpd.faturamento_disribuidora DESC
 LIMIT 15;
 
 
 -- ========================================
--- 11. RANKING DE DESEMPENHO - DISTRIBUIDORAS POR ANO
+-- 11. RANKING DE DESEMPENHO - disRIBUIDORAS POR ANO
 -- ========================================
 SELECT 
-    dlan.ano,
-    dist.distribuidora,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes_lancados,
+    dla.ano,
+    dis.disribuidora,
+    COUNT(disINCT lan.srk_filme_fk) AS qtd_filmes_lancados,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
-    RANK() OVER (PARTITION BY dlan.ano ORDER BY SUM(lan.renda_total) DESC) AS ranking_ano
+    RANK() OVER (PARTITION BY dla.ano ORDER BY SUM(lan.renda_total) DESC) AS ranking_ano
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
-GROUP BY dlan.ano, dist.distribuidora
-ORDER BY dlan.ano DESC, ranking_ano ASC;
+INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+GROUP BY dla.ano, dis.disribuidora
+ORDER BY dla.ano DESC, ranking_ano ASC;
 
 
 -- ========================================
 -- 12. FILMES MAIS ASSISTIDOS (MAIOR PÚBLICO)
 -- ========================================
 SELECT 
-    filme.titulo_original,
-    filme.tipo_obra,
-    filme.pais_obra,
-    dist.distribuidora,
-    dlan.ano,
+    fil.titulo_original,
+    fil.tipo_obra,
+    fil.pais_obra,
+    dis.disribuidora,
+    dla.ano,
     SUM(lan.publico_total) AS total_publico,
     SUM(lan.renda_total) AS faturamento_total,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-INNER JOIN gold.DIM_DISTRIBUIDORA dist ON lan.srk_dist_fk = dist.srk_dist_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
-GROUP BY filme.titulo_original, filme.tipo_obra, filme.pais_obra, dist.distribuidora, dlan.ano
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_disRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
+GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.disribuidora, dla.ano
 ORDER BY total_publico DESC
 LIMIT 10;
 
@@ -254,19 +254,19 @@ LIMIT 10;
 -- ========================================
 SELECT 
     CASE 
-        WHEN filme.pais_obra = 'BRASIL' THEN 'BRASIL'
+        WHEN fil.pais_obra = 'BRASIL' THEN 'BRASIL'
         ELSE 'OUTROS PAÍSES'
     END AS origem,
-    COUNT(DISTINCT filme.srk_filme_pk) AS qtd_filmes,
+    COUNT(disINCT fil.srk_filme_pk) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
 GROUP BY 
     CASE 
-        WHEN filme.pais_obra = 'BRASIL' THEN 'BRASIL'
+        WHEN fil.pais_obra = 'BRASIL' THEN 'BRASIL'
         ELSE 'OUTROS PAÍSES'
     END
 ORDER BY faturamento_total DESC;
@@ -276,33 +276,33 @@ ORDER BY faturamento_total DESC;
 -- 14. EVOLUÇÃO DO TICKET MÉDIO POR ANO
 -- ========================================
 SELECT 
-    dlan.ano,
+    dla.ano,
     COUNT(*) AS qtd_lancamentos,
     ROUND(AVG(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS ticket_medio,
     ROUND(MIN(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS ticket_minimo,
     ROUND(MAX(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS ticket_maximo,
     ROUND(STDDEV(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS desvio_padrao_ticket
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk
 WHERE lan.publico_total > 0
-GROUP BY dlan.ano
-ORDER BY dlan.ano;
+GROUP BY dla.ano
+ORDER BY dla.ano;
 
 
 -- ========================================
 -- 15. PERFORMANCE DE FILMES POR CÓDIGO CPB/ROE
 -- ========================================
 SELECT 
-    filme.cpb_roe,
-    filme.titulo_original,
-    filme.tipo_obra,
+    fil.cpb_roe,
+    fil.titulo_original,
+    fil.tipo_obra,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     COUNT(*) AS qtd_lancamentos_registrados
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = filme.srk_filme_pk
-WHERE filme.cpb_roe IS NOT NULL
-GROUP BY filme.cpb_roe, filme.titulo_original, filme.tipo_obra
+INNER JOIN gold.DIM_FILME filme ON lan.srk_filme_fk = fil.srk_filme_pk
+WHERE fil.cpb_roe IS NOT NULL
+GROUP BY fil.cpb_roe, fil.titulo_original, fil.tipo_obra
 ORDER BY faturamento_total DESC
 LIMIT 20;
 
@@ -311,13 +311,13 @@ LIMIT 20;
 -- 16. DASHBOARD RESUMO EXECUTIVO
 -- ========================================
 SELECT 
-    COUNT(DISTINCT lan.srk_filme_fk) AS total_filmes_unicos,
-    COUNT(DISTINCT lan.srk_dist_fk) AS total_distribuidoras,
+    COUNT(disINCT lan.srk_filme_fk) AS total_filmes_unicos,
+    COUNT(disINCT lan.srk_dis_fk) AS total_disribuidoras,
     SUM(lan.renda_total) AS faturamento_total_geral,
     SUM(lan.publico_total) AS publico_total_geral,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio_lancamento,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio_geral,
-    MIN(dlan.ano) AS ano_inicial,
-    MAX(dlan.ano) AS ano_final
+    MIN(dla.ano) AS ano_inicial,
+    MAX(dla.ano) AS ano_final
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dlan.srk_dlan_pk;
+INNER JOIN gold.DIM_DATA_LANCAMENTO dlan ON lan.srk_dlan_fk = dla.srk_dlan_pk;
