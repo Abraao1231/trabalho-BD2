@@ -14,13 +14,13 @@
 
 ### ATRIBUTOS
 
-* DIM_DISTRIBUIDORA (<u>srk_dist_pk</u>, registro_distribuidora, distribuidora, cnpj_distribuidora)
+* DIM_DISTRIBUIDORA (<u>srk_dis</u>, registro_distribuidora, distribuidora, cnpj_distribuidora)
 
-* DIM_FILME (<u>srk_filme_pk</u> , titulo_original, tipo_obra, pais_obra, cbp_roe)
+* DIM_FILME (<u>srk_filme</u>, titulo_original, tipo_obra, pais_obra, cbp_roe)
 
-* DIM_DATA_LANCAMENTO (<u>srk_dlan_pk </u>, dia, mes, ano)
+* DIM_DATA_LANCAMENTO (<u>srk_dla</u>, dia, mes, ano)
 
-* FAT_LANCAMENTO(<u>srk_lan_pk</u>,  srk_filme_fk , srk_dlan_fk, srk_dsit_fk , publico_total, renda)
+* FAT_LANCAMENTO(<u>srk_lan</u>, srk_filme, srk_dla, srk_dis, publico_total, renda_total)
 
 ### RELACIONAMENTOS
 

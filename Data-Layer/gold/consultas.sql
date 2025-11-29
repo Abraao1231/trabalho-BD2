@@ -11,9 +11,9 @@ SELECT
     dis.cnpj_distribuidora AS cnpj,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes_lancados
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes_lancados
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
 GROUP BY dis.distribuidora, dis.cnpj_distribuidora
 ORDER BY faturamento_total DESC
 LIMIT 10;
@@ -32,9 +32,9 @@ SELECT
     SUM(lan.publico_total) AS publico_total,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.distribuidora, dla.ano
 ORDER BY bilheteria_total DESC
 LIMIT 10;
@@ -45,12 +45,12 @@ LIMIT 10;
 -- ========================================
 SELECT 
     fil.pais_obra,
-    COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+    COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio_por_lancamento
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 WHERE fil.pais_obra NOT IN ('ESTADOS UNIDOS', 'CANADÁ', 'CANADA')
 GROUP BY fil.pais_obra
 ORDER BY faturamento_total DESC
@@ -62,13 +62,13 @@ LIMIT 10;
 -- ========================================
 SELECT 
     fil.tipo_obra,
-    COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+    COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 GROUP BY fil.tipo_obra
 ORDER BY faturamento_total DESC;
 
@@ -78,12 +78,12 @@ ORDER BY faturamento_total DESC;
 -- ========================================
 SELECT 
     fil.tipo_obra,
-    COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+    COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 WHERE fil.tipo_obra NOT IN ('FICÇÃO', 'ANIMAÇÃO', 'FICCAO', 'ANIMACAO')
 GROUP BY fil.tipo_obra
 ORDER BY faturamento_total DESC;
@@ -94,13 +94,13 @@ ORDER BY faturamento_total DESC;
 -- ========================================
 SELECT 
     dla.ano,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_lancamentos,
+    COUNT(DISTINCT lan.srk_filme) AS qtd_lancamentos,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 GROUP BY dla.ano
 ORDER BY dla.ano DESC;
 
@@ -129,7 +129,7 @@ SELECT
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 GROUP BY dla.mes
 ORDER BY dla.mes;
 
@@ -147,8 +147,8 @@ WITH ticket_medio_calc AS (
         SUM(lan.publico_total) AS publico_total,
         ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     WHERE lan.publico_total > 0
     GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.distribuidora
 )
@@ -171,8 +171,8 @@ WITH ticket_medio_calc AS (
         SUM(lan.publico_total) AS publico_total,
         ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     WHERE lan.publico_total > 0
     GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.distribuidora
 )
@@ -195,7 +195,7 @@ faturamento_por_dis AS (
         d.distribuidora,
         SUM(lan.renda_total) AS faturamento_distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA d ON lan.srk_dis_fk = d.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA d ON lan.srk_dis = d.srk_dis
     GROUP BY d.distribuidora
 )
 SELECT 
@@ -217,13 +217,13 @@ LIMIT 15;
 SELECT 
     dla.ano,
     dis.distribuidora,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes_lancados,
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes_lancados,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     RANK() OVER (PARTITION BY dla.ano ORDER BY SUM(lan.renda_total) DESC) AS ranking_ano
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 GROUP BY dla.ano, dis.distribuidora
 ORDER BY dla.ano DESC, ranking_ano ASC;
 
@@ -241,9 +241,9 @@ SELECT
     SUM(lan.renda_total) AS faturamento_total,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 GROUP BY fil.titulo_original, fil.tipo_obra, fil.pais_obra, dis.distribuidora, dla.ano
 ORDER BY total_publico DESC
 LIMIT 10;
@@ -257,13 +257,13 @@ SELECT
         WHEN fil.pais_obra = 'BRASIL' THEN 'BRASIL'
         ELSE 'OUTROS PAÍSES'
     END AS origem,
-    COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+    COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 GROUP BY 
     CASE 
         WHEN fil.pais_obra = 'BRASIL' THEN 'BRASIL'
@@ -283,7 +283,7 @@ SELECT
     ROUND(MAX(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS ticket_maximo,
     ROUND(STDDEV(lan.renda_total / NULLIF(lan.publico_total, 0)), 2) AS desvio_padrao_ticket
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE lan.publico_total > 0
 GROUP BY dla.ano
 ORDER BY dla.ano;
@@ -300,7 +300,7 @@ SELECT
     SUM(lan.publico_total) AS publico_total,
     COUNT(*) AS qtd_lancamentos_registrados
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 WHERE fil.cpb_roe IS NOT NULL
 GROUP BY fil.cpb_roe, fil.titulo_original, fil.tipo_obra
 ORDER BY faturamento_total DESC
@@ -311,8 +311,8 @@ LIMIT 20;
 -- 16. DASHBOARD RESUMO EXECUTIVO
 -- ========================================
 SELECT 
-    COUNT(DISTINCT lan.srk_filme_fk) AS total_filmes_unicos,
-    COUNT(DISTINCT lan.srk_dis_fk) AS total_distribuidoras,
+    COUNT(DISTINCT lan.srk_filme) AS total_filmes_unicos,
+    COUNT(DISTINCT lan.srk_dis) AS total_distribuidoras,
     SUM(lan.renda_total) AS faturamento_total_geral,
     SUM(lan.publico_total) AS publico_total_geral,
     ROUND(AVG(lan.renda_total), 2) AS faturamento_medio_lancamento,
@@ -320,7 +320,7 @@ SELECT
     MIN(dla.ano) AS ano_inicial,
     MAX(dla.ano) AS ano_final
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk;
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla;
 
 
 -- ========================================
@@ -343,10 +343,10 @@ WITH periodos_trienais AS (
         dis.cnpj_distribuidora,
         lan.renda_total,
         lan.publico_total,
-        lan.srk_filme_fk
+        lan.srk_filme
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
 ),
 faturamento_trienal AS (
     SELECT 
@@ -356,7 +356,7 @@ faturamento_trienal AS (
         cnpj_distribuidora,
         SUM(renda_total) AS faturamento_total,
         SUM(publico_total) AS publico_total,
-        COUNT(DISTINCT srk_filme_fk) AS qtd_filmes,
+        COUNT(DISTINCT srk_filme) AS qtd_filmes,
         ROUND(AVG(renda_total), 2) AS faturamento_medio
     FROM periodos_trienais
     GROUP BY periodo_trienal, ano_inicio_periodo, distribuidora, cnpj_distribuidora
@@ -394,7 +394,7 @@ ORDER BY periodo_trienal DESC, ranking ASC;
 WITH top_10_distribuidoras AS (
     SELECT distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     GROUP BY distribuidora
     ORDER BY SUM(lan.renda_total) DESC
     LIMIT 10
@@ -404,10 +404,10 @@ SELECT
     dla.ano,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_10_distribuidoras)
 GROUP BY dis.distribuidora, dla.ano
 ORDER BY dla.ano DESC, faturamento_total DESC;
@@ -419,7 +419,7 @@ ORDER BY dla.ano DESC, faturamento_total DESC;
 WITH top_10_distribuidoras AS (
     SELECT distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     GROUP BY distribuidora
     ORDER BY SUM(lan.renda_total) DESC
     LIMIT 10
@@ -427,11 +427,11 @@ WITH top_10_distribuidoras AS (
 SELECT 
     dis.distribuidora,
     SUM(lan.renda_total) AS faturamento_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes,
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes,
     SUM(lan.publico_total) AS publico_total,
-    ROUND(SUM(lan.renda_total) / NULLIF(COUNT(DISTINCT lan.srk_filme_fk), 0), 2) AS faturamento_medio_por_filme
+    ROUND(SUM(lan.renda_total) / NULLIF(COUNT(DISTINCT lan.srk_filme), 0), 2) AS faturamento_medio_por_filme
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_10_distribuidoras)
 GROUP BY dis.distribuidora
 ORDER BY faturamento_total DESC;
@@ -445,7 +445,7 @@ WITH top_distribuidoras AS (
         dis.distribuidora,
         SUM(lan.renda_total) AS faturamento_total_geral
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     GROUP BY dis.distribuidora
     ORDER BY faturamento_total_geral DESC
     LIMIT 10
@@ -456,8 +456,8 @@ SELECT
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_distribuidoras)
 GROUP BY dla.ano, dis.distribuidora
 ORDER BY dla.ano, faturamento_total DESC;
@@ -469,15 +469,15 @@ ORDER BY dla.ano, faturamento_total DESC;
 WITH distribuidoras_eua_canada AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
     GROUP BY dis.distribuidora
     HAVING ROUND(100.0 * SUM(CASE WHEN fil.pais_obra IN ('ESTADOS UNIDOS', 'CANADÁ') THEN 1 ELSE 0 END) / COUNT(*), 2) >= 70
 ),
 top_10_distribuidoras AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     WHERE dis.distribuidora NOT IN (SELECT distribuidora FROM distribuidoras_eua_canada)
     GROUP BY dis.distribuidora
     ORDER BY SUM(lan.renda_total) DESC
@@ -488,10 +488,10 @@ SELECT
     dla.ano,
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_10_distribuidoras)
 GROUP BY dis.distribuidora, dla.ano
 ORDER BY dla.ano DESC, faturamento_total DESC;
@@ -503,15 +503,15 @@ ORDER BY dla.ano DESC, faturamento_total DESC;
 WITH distribuidoras_eua_canada AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
     GROUP BY dis.distribuidora
     HAVING ROUND(100.0 * SUM(CASE WHEN fil.pais_obra IN ('ESTADOS UNIDOS', 'CANADÁ') THEN 1 ELSE 0 END) / COUNT(*), 2) >= 70
 ),
 top_10_distribuidoras AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     WHERE dis.distribuidora NOT IN (SELECT distribuidora FROM distribuidoras_eua_canada)
     GROUP BY dis.distribuidora
     ORDER BY SUM(lan.renda_total) DESC
@@ -520,11 +520,11 @@ top_10_distribuidoras AS (
 SELECT 
     dis.distribuidora,
     SUM(lan.renda_total) AS faturamento_total,
-    COUNT(DISTINCT lan.srk_filme_fk) AS qtd_filmes,
+    COUNT(DISTINCT lan.srk_filme) AS qtd_filmes,
     SUM(lan.publico_total) AS publico_total,
-    ROUND(SUM(lan.renda_total) / NULLIF(COUNT(DISTINCT lan.srk_filme_fk), 0), 2) AS faturamento_medio_por_filme
+    ROUND(SUM(lan.renda_total) / NULLIF(COUNT(DISTINCT lan.srk_filme), 0), 2) AS faturamento_medio_por_filme
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_10_distribuidoras)
 GROUP BY dis.distribuidora
 ORDER BY faturamento_total DESC;
@@ -536,8 +536,8 @@ ORDER BY faturamento_total DESC;
 WITH distribuidoras_eua_canada AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
     GROUP BY dis.distribuidora
     HAVING ROUND(100.0 * SUM(CASE WHEN fil.pais_obra IN ('ESTADOS UNIDOS', 'CANADÁ') THEN 1 ELSE 0 END) / COUNT(*), 2) >= 70
 ),
@@ -546,7 +546,7 @@ top_distribuidoras AS (
         dis.distribuidora,
         SUM(lan.renda_total) AS faturamento_total_geral
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     WHERE dis.distribuidora NOT IN (SELECT distribuidora FROM distribuidoras_eua_canada)
     GROUP BY dis.distribuidora
     ORDER BY faturamento_total_geral DESC
@@ -558,8 +558,8 @@ SELECT
     SUM(lan.renda_total) AS faturamento_total,
     SUM(lan.publico_total) AS publico_total
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_distribuidoras)
 GROUP BY dla.ano, dis.distribuidora
 ORDER BY dla.ano, faturamento_total DESC;
@@ -571,7 +571,7 @@ ORDER BY dla.ano, faturamento_total DESC;
 WITH top_distribuidoras AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     GROUP BY dis.distribuidora
     ORDER BY SUM(lan.renda_total) DESC
     LIMIT 15
@@ -580,12 +580,12 @@ diversidade_por_distribuidora AS (
     SELECT 
         dis.distribuidora,
         fil.pais_obra,
-        COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+        COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
         SUM(lan.renda_total) AS faturamento_por_pais,
         SUM(lan.publico_total) AS publico_por_pais
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
     WHERE dis.distribuidora IN (SELECT distribuidora FROM top_distribuidoras)
     GROUP BY dis.distribuidora, fil.pais_obra
 )
@@ -607,7 +607,7 @@ ORDER BY qtd_paises_diferentes DESC, indice_diversidade DESC;
 -- ========================================
 WITH regioes_classificadas AS (
     SELECT 
-        lan.srk_lan_pk,
+        lan.srk_lan,
         dis.distribuidora,
         fil.titulo_original,
         fil.pais_obra,
@@ -622,8 +622,8 @@ WITH regioes_classificadas AS (
             ELSE 'Oriente Médio e Norte da África'
         END AS regiao_geografica
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
 ),
 faturamento_total_geral AS (
     SELECT SUM(renda_total) AS total_mercado
@@ -631,12 +631,12 @@ faturamento_total_geral AS (
 )
 SELECT 
     rc.regiao_geografica,
-    COUNT(DISTINCT rc.srk_lan_pk) AS qtd_lancamentos,
+    COUNT(DISTINCT rc.srk_lan) AS qtd_lancamentos,
     SUM(rc.renda_total) AS faturamento_regiao,
     SUM(rc.publico_total) AS publico_regiao,
     ROUND(SUM(rc.renda_total) / NULLIF(SUM(rc.publico_total), 0), 2) AS ticket_medio,
     ROUND((SUM(rc.renda_total) / ftg.total_mercado) * 100, 2) AS percentual_faturamento_total,
-    ROUND(SUM(rc.renda_total) / NULLIF(COUNT(DISTINCT rc.srk_lan_pk), 0), 2) AS faturamento_medio_por_lancamento
+    ROUND(SUM(rc.renda_total) / NULLIF(COUNT(DISTINCT rc.srk_lan), 0), 2) AS faturamento_medio_por_lancamento
 FROM regioes_classificadas rc
 CROSS JOIN faturamento_total_geral ftg
 GROUP BY rc.regiao_geografica, ftg.total_mercado
@@ -655,7 +655,7 @@ SELECT
     SUM(lan.publico_total) AS publico_total,
     SUM(lan.renda_total) AS renda_total,
     ROUND(SUM(lan.renda_total) / NULLIF(SUM(lan.publico_total), 0), 2) AS ticket_medio,
-    COUNT(DISTINCT dla.srk_dla_pk) AS qtd_lancamentos,
+    COUNT(DISTINCT dla.srk_dla) AS qtd_lancamentos,
     CASE 
         WHEN SUM(lan.publico_total) >= 1000000 THEN 'Blockbuster (>1M)'
         WHEN SUM(lan.publico_total) >= 500000 THEN 'Alto Público (500K-1M)'
@@ -670,9 +670,9 @@ SELECT
         ELSE 'Muito Baixa (<1M)'
     END AS categoria_faturamento
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla_fk = dla.srk_dla_pk
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_DATA_LANCAMENTO dla ON lan.srk_dla = dla.srk_dla
 WHERE lan.publico_total > 0 AND lan.renda_total > 0
 GROUP BY 
     fil.titulo_original,
@@ -690,7 +690,7 @@ ORDER BY publico_total DESC, renda_total DESC;
 WITH top_10_diversas AS (
     SELECT dis.distribuidora
     FROM gold.FAT_LANCAMENTO lan
-    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
+    INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
     GROUP BY dis.distribuidora
     ORDER BY SUM(lan.renda_total) DESC
     LIMIT 20
@@ -698,12 +698,12 @@ WITH top_10_diversas AS (
 SELECT 
     dis.distribuidora,
     fil.pais_obra,
-    COUNT(DISTINCT fil.srk_filme_pk) AS qtd_filmes,
+    COUNT(DISTINCT fil.srk_filme) AS qtd_filmes,
     SUM(lan.renda_total) AS faturamento_por_pais,
     ROUND(100.0 * SUM(lan.renda_total) / SUM(SUM(lan.renda_total)) OVER (PARTITION BY dis.distribuidora), 2) AS percentual_faturamento
 FROM gold.FAT_LANCAMENTO lan
-INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis_fk = dis.srk_dis_pk
-INNER JOIN gold.DIM_FILME fil ON lan.srk_filme_fk = fil.srk_filme_pk
+INNER JOIN gold.DIM_DISTRIBUIDORA dis ON lan.srk_dis = dis.srk_dis
+INNER JOIN gold.DIM_FILME fil ON lan.srk_filme = fil.srk_filme
 WHERE dis.distribuidora IN (SELECT distribuidora FROM top_10_diversas)
     AND fil.pais_obra != 'ESTADOS UNIDOS'
 GROUP BY dis.distribuidora, fil.pais_obra
